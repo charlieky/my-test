@@ -100,7 +100,7 @@ export function SportsCarousel() {
             </div>
           )}
           
-          <div className="overflow-hidden">
+          <div className="overflow-hidden border-t-2 border-yellow-400 rounded-xl">
             <div 
               className="flex space-x-4"
               ref={rowIndex === 0 ? sliderRef : undefined}

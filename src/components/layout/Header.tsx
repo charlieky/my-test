@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "react-router-dom";
@@ -6,9 +6,11 @@ import { Link } from "react-router-dom";
 export const Header = () => {
   const [language, setLanguage] = useState("vi");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const [isLoggedIn] = useState(true); // Simulate logged in state for demo
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Default to not logged in
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const accountDropdownRef = useRef<HTMLDivElement>(null);
 
-  const navItems = [
+ const navItems = [
   {
     name: "LỊCH TRỰC TIẾP, ",
     path: "/lich-truc-tiep",
@@ -53,21 +55,55 @@ export const Header = () => {
 ];
 
 
+  // Account dropdown items
+  const accountMenuItems = [
+    { name: "TRANG CÁ NHÂN", icon: "home", path: "/profile" },
+    { name: "NHIỆM VỤ", icon: "target", path: "/missions" },
+    { name: "VÍ CỦA BẠN", icon: "wallet", path: "/wallet" },
+    { name: "LỊCH SỬ GIAO DỊCH", icon: "history", path: "/transaction-history" },
+    { name: "THOÁT TÀI KHOẢN", icon: "logout", path: "/logout" },
+  ];
 
-const handleMouseEnter = (navName: string) => {
-  setHoveredNav(navName);
-};
+  const handleMouseEnter = (navName: string) => {
+    setHoveredNav(navName);
+  };
 
-const handleMouseLeave = () => {
-  setHoveredNav(null);
-};
+  const handleMouseLeave = () => {
+    setHoveredNav(null);
+  };
 
+  const toggleAccountDropdown = () => {
+    setIsAccountDropdownOpen(!isAccountDropdownOpen);
+  };
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setIsAccountDropdownOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
+        setIsAccountDropdownOpen(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="w-full relative">
       {/* Logo with black background - spans both header bars */}
       <div className="absolute top-0 left-0 z-10 h-full">
-        <div className="h-full items-center justify-center">
+        <div className=" h-full items-center justify-center">
           <Link to="/" className="flex items-center justify-center">
             <img src="/assets/images/Header_Logo.png" alt="Logo" className="h-full" />
           </Link>
@@ -119,7 +155,7 @@ const handleMouseLeave = () => {
           <div className="hidden lg:flex items-center ml-6">
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
-                {/* Welcome message and coins */}
+                {/* User info and coins */}
                 <div className="flex items-center text-sm font-medium rounded-full bg-white/10 px-3 py-1.5 text-black">
                   <span className="mr-2">Xin chào, NguyenVanDen</span>
                   
@@ -131,25 +167,67 @@ const handleMouseLeave = () => {
                     </button>
                   </div>
                   
-                  {/* User icons */}
-                  <div className="flex items-center gap-1 ml-2">
-                    <button className="text-yellow-600">
-                      🏆
-                    </button>
-                    <button className="text-yellow-600">
-                      📧
-                    </button>
-                    <button className="text-yellow-600">
-                      🔔
-                    </button>
-                    <img 
-                      src="https://i.pravatar.cc/40" 
-                      alt="User" 
-                      className="w-7 h-7 rounded-full border-2 border-yellow-600" 
-                    />
-                  </div>
-                </div>
-              </div>
+                 {/* User icons with dropdown functionality */}
+<div className="flex items-center gap-1 ml-2 relative group">
+  <button className="text-yellow-600 hover:bg-gray-700 rounded p-1">
+    🏆
+  </button>
+  <button className="text-yellow-600 hover:bg-gray-700 rounded p-1">
+    📧
+  </button>
+  <button className="text-yellow-600 hover:bg-gray-700 rounded p-1">
+    🔔
+  </button>
+  <img 
+    src="https://i.pravatar.cc/40" 
+    alt="User" 
+    className="w-7 h-7 rounded-full border-2 border-yellow-600" 
+  />
+
+  {/* Account dropdown menu - appears on hover */}
+  <div className="absolute right-0 mt-40 bg-black text-white rounded-md overflow-hidden z-30 w-64 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+    {accountMenuItems.map((item) => (
+      <Link
+        key={item.name}
+        to={item.path}
+        className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-800 transition border-b border-gray-800 last:border-0"
+        onClick={item.icon === "logout" ? handleLogout : undefined}
+      >
+        <div className="w-6 h-6 flex items-center justify-center">
+          {item.icon === "home" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+          )}
+          {item.icon === "target" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 100-4 2 2 0 000 4z" />
+            </svg>
+          )}
+          {item.icon === "wallet" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+              <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+            </svg>
+          )}
+          {item.icon === "history" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            </svg>
+          )}
+          {item.icon === "logout" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          )}
+        </div>
+        <span className="font-medium">{item.name}</span>
+      </Link>
+    ))}
+            </div>
+          </div>
+          </div>
+          </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Button 
@@ -161,6 +239,7 @@ const handleMouseLeave = () => {
                 <Button 
                   variant="default" 
                   className="bg-black hover:bg-gray-900 text-white rounded-full px-6 font-semibold"
+                  onClick={handleLogin}
                 >
                   ĐĂNG NHẬP
                 </Button>
@@ -217,10 +296,10 @@ const handleMouseLeave = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              className="rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center  px-3"
+              className="rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center space-x-1 px-3"
               onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
             >
-                    <img src="/assets/images/vn.png" alt="Logo" className="h-full" />
+            <img src="/assets/images/vn.png" alt="Logo" className="h-full" />
               <span className="text-sm">TIẾNG VIỆT</span>
             </Button>
 
